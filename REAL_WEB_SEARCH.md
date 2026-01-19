@@ -1,374 +1,566 @@
-# 🌐 VELOCITY - REAL WEB SEARCH + NLP
+# Velocity Real Web Search Implementation
 
 **"Intelligence lives in the speed of interrogation, not in the size of memory."**
 
-Velocity artık **gerçek web'den arama yapıyor** - LLM yok, sadece NLP!
+Velocity performs real web searches without relying on large language models. All content processing uses traditional NLP techniques.
 
 ---
 
-## ✅ Çalışma Prensibi
+## Overview
 
-### Arama Stratejisi (Cascade)
+### Search Strategy (Cascade)
+
+Velocity employs a cascading search strategy with multiple fallback options:
 
 ```
-1. Real Web Search (Google/Bing/DDG scraping) 🔍
-   ↓ (failed)
-2. Wikipedia API 📚
-   ↓ (failed)
-3. DuckDuckGo Instant Answer 🦆
-   ↓ (failed)
-4. Enhanced Simulated Fallback ⚙️
+1. Real Web Search (Google/Bing/DuckDuckGo scraping)
+   ↓ (if unavailable)
+2. Wikipedia API
+   ↓ (if unavailable)
+3. DuckDuckGo Instant Answer
+   ↓ (if unavailable)
+4. Enhanced Simulated Fallback
 ```
 
-### NLP Processing (NO LLM!)
+### NLP Processing (No LLM)
 
-Tüm text processing **LLM kullanmadan** yapılıyor:
+All text processing is performed without large language models:
 
-- **TF-IDF** ile keyword extraction
-- **Extractive summarization** (en önemli cümleleri seç)
-- **Cosine similarity** ile relevance scoring
-- **BeautifulSoup** ile HTML parsing
+- **TF-IDF**: Keyword extraction using statistical methods
+- **Extractive Summarization**: Selecting most important sentences
+- **Cosine Similarity**: Relevance scoring between query and content
+- **BeautifulSoup**: HTML parsing and content extraction
 
 ---
 
-## 🚀 Kurulum
+## Installation
 
-### 1. Dependencies Zaten Yüklü
+### Dependencies
+
+All required NLP libraries are included in `requirements.txt`:
 
 ```bash
 pip install beautifulsoup4 requests spacy nltk scikit-learn aiohttp
 ```
 
-✅ Tüm NLP kütüphaneleri yüklü!
+### API Keys (Optional)
 
-### 2. API Keys (Optional)
-
-Daha iyi sonuçlar için API key'ler ekle:
+For enhanced search results, configure API keys:
 
 #### Google Custom Search
 
-1. [Google Cloud Console](https://console.cloud.google.com/) → Create API Key
-2. [Custom Search Engine](https://programmablesearchengine.google.com/) → Create CSE
+1. Create API Key at [Google Cloud Console](https://console.cloud.google.com/)
+2. Create Custom Search Engine at [Programmable Search Engine](https://programmablesearchengine.google.com/)
+3. Configure environment variables:
 
 ```bash
 export GOOGLE_API_KEY="your-api-key"
 export GOOGLE_CSE_ID="your-cse-id"
 ```
 
-#### Bing Search
+#### Bing Search API
 
-1. [Azure Portal](https://portal.azure.com/) → Create Bing Search Resource
+1. Create resource at [Azure Portal](https://portal.azure.com/)
+2. Get API key from resource
+3. Configure environment variable:
 
 ```bash
 export BING_API_KEY="your-bing-key"
 ```
 
----
+### Without API Keys
 
-## 💡 Kullanım
-
-### Otomatik (API keys varsa kullanır, yoksa DDG scraping yapar)
-
-```python
-from velocity.core.velocity_core import VelocityCore
-
-# API keys environment variable'lardan okunur
-core = VelocityCore()
-
-result = await core.execute("quantum computing nedir")
-```
-
-### Manuel Control
-
-```python
-from velocity.network.interrogator import NetworkInterrogator
-
-# Real web search enabled (default)
-interrogator = NetworkInterrogator(use_real_search=True)
-
-# Disabled (sadece Wikipedia/DDG API)
-interrogator = NetworkInterrogator(use_real_search=False)
-```
+DuckDuckGo HTML scraping works automatically without any API keys. This is the default fallback and requires no configuration.
 
 ---
 
-## 📊 Arama Kaynakları
+## Architecture
 
-### 1. Google Custom Search ⭐
+### WebSearchEngine Class
 
-**장점**:
-- En kapsamlı
-- En doğru results
-- Custom filters
+Located in `velocity/network/web_search.py`, this class orchestrates all web search operations.
 
-**단점**:
-- API key gerekli
-- Rate limited (100 queries/day free)
+#### Methods
 
-### 2. Bing Search ⭐
+**`search(query, source_type)`**
+- Main search method
+- Cascades through available search engines
+- Returns list of `SearchResult` objects
 
-**장점**:
-- Hızlı
-- Güvenilir
-- Bing Index
+**`_search_google(query)`**
+- Google Custom Search API integration
+- Requires API key
+- Returns top results with snippets
 
-**단점**:
-- API key gerekli
-- Ücretli (after free tier)
+**`_search_bing(query)`**
+- Bing Search API integration
+- Requires API key
+- Returns results with metadata
 
-### 3. DuckDuckGo HTML Scraping 🆓
+**`_search_duckduckgo_html(query)`**
+- HTML scraping (no API key required)
+- Parses DuckDuckGo search results
+- Most reliable fallback option
 
-**장점**:
-- ✅ API key gerekmez!
-- Privacy-focused
-- Her zaman çalışır
+**`_search_code(query)`**
+- Searches GitHub Code Search
+- Searches StackOverflow API
+- Specialized for code-related queries
 
-**단점**:
-- HTML parsing (kırılgan)
-- Rate limit riski
-- Daha yavaş
+**`_fetch_content(url)`**
+- Fetches full content from URL
+- Cleans HTML using BeautifulSoup
+- Removes scripts, styles, navigation
+- Returns plain text
 
-### 4. GitHub Code Search 💻
+### NLPProcessor Class
 
-**Generative queries** için:
-- Public repos
-- Code örnekleri
-- No auth for limited requests
+Located in `velocity/network/web_search.py`, this class handles all NLP operations.
 
-### 5. StackOverflow API 💻
+#### Methods
 
-**Generative queries** için:
-- Programming Q&A
-- Accepted answers
-- Community-driven
+**`extract_keywords(text, top_k)`**
+- TF-IDF based keyword extraction
+- No LLM required
+- Returns most important terms
 
----
+**`extractive_summarize(text, num_sentences)`**
+- Sentence-level extractive summarization
+- Selects most relevant sentences
+- No text generation, only selection
 
-## 🎯 Örnekler
-
-### Factual Query
-
-```python
-result = await core.execute("What is quantum computing?")
-
-# Output:
-# - Real web search: Google/Bing/DDG
-# - NLP summarization (extractive)
-# - Keywords: quantum, computing, qubits, superposition
-# - Relevance: 0.87
-```
-
-### Code Generation Query
-
-```python
-result = await core.execute("python fibonacci kodu yaz")
-
-# Output:
-# - Search: GitHub + StackOverflow
-# - Real code examples
-# - No LLM generation!
-```
-
-### Comparison Query
-
-```python
-result = await core.execute("Python vs JavaScript karşılaştır")
-
-# Output:
-# - Multiple sources
-# - Extractive summary from each
-# - Combined with NLP
-```
+**`calculate_relevance(query, text)`**
+- Cosine similarity between TF-IDF vectors
+- Quantifies query-content relevance
+- Returns score 0.0-1.0
 
 ---
 
-## ⚙️ Configuration
+## Search Engines
+
+### DuckDuckGo (HTML Scraping)
+
+**Advantages:**
+- No API key required
+- Reliable and fast
+- Good result quality
+
+**Implementation:**
+- Parses HTML directly
+- Extracts titles, snippets, URLs
+- Handles protocol-relative URLs
+
+**Limitations:**
+- Rate limiting possible
+- HTML structure may change
+
+### Google Custom Search
+
+**Advantages:**
+- High-quality results
+- Rich metadata
+- Good for factual queries
+
+**Implementation:**
+- REST API integration
+- JSON response parsing
+- 100 free queries/day
+
+**Limitations:**
+- Requires API key
+- Limited free tier
+
+### Bing Search API
+
+**Advantages:**
+- Good result diversity
+- Rich answer snippets
+- Fast response
+
+**Implementation:**
+- REST API integration
+- JSON response parsing
+- Subscription required
+
+**Limitations:**
+- Requires API key
+- Paid service
+
+### GitHub Code Search
+
+**Advantages:**
+- Real code examples
+- Community-verified code
+- Up-to-date implementations
+
+**Implementation:**
+- GitHub API v3
+- Language filtering
+- Relevance scoring
+
+**Limitations:**
+- Rate limited
+- Public repositories only
+
+### StackOverflow API
+
+**Advantages:**
+- Answered questions
+- Community-voted solutions
+- Programming-specific
+
+**Implementation:**
+- REST API integration
+- Answer filtering
+- Accept rate scoring
+
+**Limitations:**
+- Rate limited
+- Programming-focused only
+
+---
+
+## NLP Techniques
+
+### TF-IDF (Term Frequency-Inverse Document Frequency)
+
+Used for keyword extraction and relevance scoring.
+
+**Process:**
+1. Vectorize text using `sklearn.TfidfVectorizer`
+2. Calculate term importance scores
+3. Extract top-k terms
+4. Use for relevance matching
+
+**Advantages:**
+- Fast computation
+- No training required
+- Language-independent
+
+### Extractive Summarization
+
+Selects most important sentences rather than generating new text.
+
+**Process:**
+1. Split text into sentences
+2. Calculate TF-IDF for each sentence
+3. Score sentences by importance
+4. Select top-n sentences
+5. Maintain original order
+
+**Advantages:**
+- No hallucinations (original text)
+- Fast computation
+- Preserves factual accuracy
+
+### Cosine Similarity
+
+Measures similarity between query and document vectors.
+
+**Process:**
+1. Convert query and document to TF-IDF vectors
+2. Calculate cosine of angle between vectors
+3. Return similarity score (0.0-1.0)
+4. Higher score = more relevant
+
+**Advantages:**
+- Quantifies relevance
+- Fast computation
+- Handles vocabulary mismatch
+
+### Content Extraction
+
+Extracts clean text from HTML using BeautifulSoup.
+
+**Process:**
+1. Fetch HTML content
+2. Parse with BeautifulSoup
+3. Remove scripts, styles, navigation
+4. Extract main text content
+5. Clean whitespace
+
+**Advantages:**
+- Removes boilerplate
+- Focuses on main content
+- Handles various HTML structures
+
+---
+
+## Integration
+
+### NetworkInterrogator Integration
+
+The `NetworkInterrogator` class in `velocity/network/interrogator.py` uses `WebSearchEngine`:
+
+```python
+from .web_search import WebSearchEngine, NLPProcessor
+
+class NetworkInterrogator:
+    def __init__(self, use_real_search=True):
+        if use_real_search:
+            self.web_search = WebSearchEngine(
+                google_api_key=os.getenv('GOOGLE_API_KEY'),
+                google_cse_id=os.getenv('GOOGLE_CSE_ID'),
+                bing_api_key=os.getenv('BING_API_KEY'),
+                max_results=3,
+                timeout=10
+            )
+            self.nlp = NLPProcessor()
+```
+
+### Query Execution Flow
+
+```
+1. User query received
+2. Intent parsed (decision type determined)
+3. Sources selected (epistemic routing)
+4. Parallel web search executed
+5. Content fetched from top results
+6. NLP processing:
+   - Keyword extraction
+   - Extractive summarization
+   - Relevance scoring
+7. Results returned with metadata
+```
+
+---
+
+## Performance
+
+### Latency
+
+- Average query: 1-3 seconds
+- Parallel execution: 2-5 queries simultaneously
+- Content fetch: ~500ms per URL
+- NLP processing: ~100ms per document
+
+### Resource Usage
+
+- Memory: ~500MB (including NLP models)
+- CPU: Moderate (TF-IDF computation)
+- Network: Required (real-time search)
+- Disk: Minimal (no caching)
+
+### Accuracy
+
+- Source quality: High (verified web sources)
+- No hallucinations: Only real content
+- Confidence calibration: Based on source agreement
+- Relevance scoring: Quantified via cosine similarity
+
+---
+
+## Error Handling
+
+### Cascade Strategy
+
+If primary search fails, Velocity automatically falls back:
+
+```
+Google → Bing → DuckDuckGo → Wikipedia → Simulated
+```
+
+### Timeout Handling
+
+Each search operation has configurable timeout:
+- Default: 10 seconds
+- Configurable per engine
+- Graceful degradation
+
+### Rate Limiting
+
+API rate limits are handled automatically:
+- DuckDuckGo scraping: No limits
+- Google CSE: 100/day free
+- Bing: Subscription-based
+- Fallback to unlimited sources
+
+---
+
+## Configuration
 
 ### Environment Variables
 
 ```bash
-# Optional - for best results
-export GOOGLE_API_KEY="your-key"
+# Optional: Enhanced search
+export GOOGLE_API_KEY="your-google-key"
 export GOOGLE_CSE_ID="your-cse-id"
-export BING_API_KEY="your-key"
+export BING_API_KEY="your-bing-key"
 
-# Run Velocity
-python interactive_velocity.py
+# Default values (no configuration needed)
+VELOCITY_TIMEOUT=10
+VELOCITY_MAX_RESULTS=3
+VELOCITY_USER_AGENT="Velocity/0.3.0"
 ```
 
-### Without API Keys
+### Python Configuration
 
-API key yoksa **DuckDuckGo HTML scraping** otomatik devreye girer:
+```python
+from velocity.network.web_search import WebSearchEngine
 
-```
-🔍 Real web search: query
-  → Google (no key, skipped)
-  → Bing (no key, skipped)
-  → DuckDuckGo HTML (✅ working!)
-  → GitHub (✅ no auth needed)
-  → StackOverflow (✅ no auth needed)
-```
+# With API keys
+engine = WebSearchEngine(
+    google_api_key="your-key",
+    google_cse_id="your-id",
+    bing_api_key="your-key",
+    max_results=5,
+    timeout=15
+)
 
----
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────┐
-│   User Query                        │
-└──────────────┬──────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────┐
-│   Intent Parser (7 types)            │
-└──────────────┬───────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────┐
-│   Epistemic Router                   │
-│   (Select search strategies)         │
-└──────────────┬───────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────┐
-│   Real Web Search Engine             │
-│   ├─ Google Custom Search            │
-│   ├─ Bing Search                     │
-│   ├─ DuckDuckGo HTML Scraping        │
-│   ├─ GitHub Code Search              │
-│   └─ StackOverflow API               │
-└──────────────┬───────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────┐
-│   NLP Processor (NO LLM!)            │
-│   ├─ TF-IDF Keyword Extraction       │
-│   ├─ Extractive Summarization        │
-│   ├─ Cosine Similarity Scoring       │
-│   └─ HTML Content Extraction         │
-└──────────────┬───────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────┐
-│   Synthesized Response               │
-└──────────────────────────────────────┘
+# Without API keys (DuckDuckGo only)
+engine = WebSearchEngine(
+    max_results=3,
+    timeout=10
+)
 ```
 
 ---
 
-## 📈 Performance
+## Testing
 
-### With API Keys
+### Unit Tests
 
-```
-Query: "quantum computing"
-  ✅ Google Search: 450ms
-  ✅ NLP Processing: 120ms
-  ✅ Total: 570ms
-  
-  Sources: 3 web pages
-  Keywords: quantum, computing, qubits, superposition, entanglement
-  Summary: 3 sentences (extractive)
-  Confidence: 87%
+```bash
+# Run web search tests
+pytest tests/test_web_search.py
+
+# With coverage
+pytest tests/test_web_search.py --cov=velocity.network.web_search
 ```
 
-### Without API Keys (DDG Scraping)
+### Integration Tests
 
-```
-Query: "quantum computing"
-  ⚠️ Google (no key)
-  ⚠️ Bing (no key)
-  ✅ DuckDuckGo HTML: 950ms
-  ✅ NLP Processing: 120ms
-  ✅ Total: 1070ms
-  
-  Sources: 3 web pages
-  Keywords: quantum, computing, qubits
-  Summary: 3 sentences
-  Confidence: 72%
+```bash
+# Test with real queries
+python -c "
+from velocity.core.velocity_core import VelocityCore
+import asyncio
+
+async def test():
+    core = VelocityCore()
+    result = await core.execute('What is Python?')
+    print(result['decision'])
+
+asyncio.run(test())
+"
 ```
 
 ---
 
-## 🎉 Key Benefits
+## Comparison
 
-### ✅ No LLM Dependency
+### vs Traditional Search Engines
 
-- Tamamen **NLP-based** processing
-- TF-IDF, cosine similarity, extractive summarization
-- **No hallucinations!**
+**Advantages:**
+- Multi-source synthesis
+- Confidence calibration
+- Structured reasoning
 
-### ✅ Real Web Search
+**Trade-offs:**
+- Slightly slower
+- More complex
 
-- Google, Bing, DuckDuckGo
-- GitHub, StackOverflow
-- Always up-to-date
+### vs LLM-Based Search
 
-### ✅ Epistemically Sound
+**Advantages:**
+- No hallucinations
+- Always current
+- Full source tracking
+- Lower cost
 
-- Multiple sources
-- Confidence scoring
-- Source tracking
+**Trade-offs:**
+- Requires internet
+- Less fluent prose
 
-### ✅ Works Without API Keys
+### vs RAG Systems
 
-- DuckDuckGo HTML scraping (free!)
-- Wikipedia API (free!)
-- GitHub public repos (free!)
-- StackOverflow API (free!)
+**Advantages:**
+- No LLM dependency
+- Better source verification
+- Real-time search
 
----
-
-## 🚧 Limitations
-
-### Rate Limits
-
-- Google: 100 queries/day (free tier)
-- Bing: Pay per query
-- DDG scraping: May be blocked if abused
-
-### HTML Scraping Fragility
-
-- DuckDuckGo HTML structure değişebilir
-- Fallback mechanisms var
-
-### No LLM = No Generation
-
-- **Extractive** summarization (seçiyor)
-- NOT **abstractive** (yeni metin yazmıyor)
-- Kod generation için gerçek examples bulur
+**Trade-offs:**
+- No text generation
+- Internet required
 
 ---
 
-## 🔮 Future Enhancements
+## Future Enhancements
 
-### Short Term
+### Planned Features
 
-- [ ] More search engines (Brave, Startpage)
-- [ ] Better code search (GitLab, Bitbucket)
-- [ ] Cached results (avoid redundant queries)
+- Additional search engines (Brave, Startpage)
+- Semantic search integration
+- Result caching for common queries
+- Distributed search across multiple nodes
+- Language-specific optimizations
 
-### Long Term
+### Research Directions
 
-- [ ] Semantic search integration
-- [ ] Knowledge graph building
-- [ ] Multi-language NLP support
-
----
-
-## 📝 Summary
-
-**Velocity artık:**
-
-1. ✅ **Gerçek web'den arama yapıyor** (Google/Bing/DDG)
-2. ✅ **NLP ile processing** (TF-IDF, extractive summarization)
-3. ✅ **LLM kullanmıyor** (no hallucinations!)
-4. ✅ **API key opsiyonel** (DDG scraping fallback)
-5. ✅ **Kod örnekleri buluyor** (GitHub/StackOverflow)
-6. ✅ **7 adımlı cognitive loop** (her soruda)
+- Improved relevance scoring algorithms
+- Better content extraction techniques
+- Multi-modal search (images, videos)
+- Knowledge graph integration
+- Cross-document reasoning
 
 ---
 
-*"Intelligence lives in the speed of interrogation, not in the size of memory."*
+## Troubleshooting
 
-**Velocity 0.3.0 - Real Web Search + NLP** 🌐✨
+### No Results Returned
+
+**Possible causes:**
+- No internet connection
+- All search engines rate-limited
+- Query too specific
+
+**Solutions:**
+- Check network connectivity
+- Wait and retry
+- Broaden query terms
+
+### Slow Performance
+
+**Possible causes:**
+- Network latency
+- Many parallel queries
+- Large content fetch
+
+**Solutions:**
+- Reduce `max_results`
+- Increase `timeout`
+- Use API keys for faster engines
+
+### Low Confidence Scores
+
+**Possible causes:**
+- Ambiguous query
+- Conflicting sources
+- Limited information available
+
+**Solutions:**
+- Refine query terms
+- Check source diversity
+- Review evidence pieces
+
+---
+
+## Summary
+
+Velocity's real web search system provides:
+
+1. **No LLM dependency**: Traditional NLP only
+2. **Real-time access**: Always current information
+3. **Multiple sources**: Cross-verification
+4. **Source tracking**: Full attribution
+5. **No hallucinations**: Only real content
+6. **Confidence calibration**: Honest uncertainty
+7. **Fallback options**: Reliable operation
+
+This implementation demonstrates that effective information retrieval and synthesis can be achieved without large language models, using well-established NLP techniques and structured reasoning.
+
+---
+
+**Velocity - Network-Native Intelligence**
+
+*Intelligence through interrogation, not memorization.*

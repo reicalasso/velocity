@@ -1,19 +1,19 @@
-# VELOCITY - QUICK START GUIDE
+# Velocity Quick Start Guide
 
-**Get up and running in 5 minutes!**
+**Get up and running in 5 minutes**
 
 ---
 
-## 🚀 Installation
+## Installation
 
-### 1. Clone Repository
+### Step 1: Clone Repository
 
 ```bash
 git clone https://github.com/yourusername/velocity.git
 cd velocity
 ```
 
-### 2. Create Virtual Environment
+### Step 2: Create Virtual Environment
 
 ```bash
 # Create venv
@@ -26,13 +26,13 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### 3. Install Dependencies
+### Step 3: Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Install Velocity
+### Step 4: Install Velocity
 
 ```bash
 pip install -e .
@@ -40,18 +40,18 @@ pip install -e .
 
 ---
 
-## ✅ Verify Installation
+## Verification
 
 ```bash
 # Run tests
 pytest tests/
 
-# Should see: 26/26 tests passing ✅
+# Expected output: 26/26 tests passing
 ```
 
 ---
 
-## 🎮 Run Interactive Mode
+## Running Interactive Mode
 
 ### Option 1: Double-Click (Windows)
 
@@ -67,7 +67,7 @@ python interactive_velocity.py
 
 ---
 
-## 💡 Example Session
+## Example Session
 
 ```
 VELOCITY - INTERACTIVE MODE
@@ -91,13 +91,13 @@ QUESTION: What is machine learning?
 
 [PROCESSING...] Velocity is thinking...
 
-[1/7] INTENT PARSING          ✅
-[2/7] EPISTEMIC ROUTING       ✅
-[3/7] HYPOTHESIS GENERATION   ✅
-[4/7] NETWORK INTERROGATION   ✅ (Real web search!)
-[5/7] CONTRADICTION HANDLING  ✅
-[6/7] HYPOTHESIS ELIMINATION  ✅
-[7/7] STATE SYNTHESIS         ✅
+[1/7] INTENT PARSING          
+[2/7] EPISTEMIC ROUTING       
+[3/7] HYPOTHESIS GENERATION   
+[4/7] NETWORK INTERROGATION   (Real web search!)
+[5/7] CONTRADICTION HANDLING  
+[6/7] HYPOTHESIS ELIMINATION  
+[7/7] STATE SYNTHESIS         
 
 [ANSWER]
 Machine learning is a subset of artificial intelligence that enables 
@@ -119,7 +119,7 @@ programmed. It uses algorithms to identify patterns in data...
 
 ---
 
-## 🎯 Try These Queries
+## Example Queries
 
 ### Factual Questions
 
@@ -145,7 +145,7 @@ difference between SQL and NoSQL
 React vs Vue
 ```
 
-### How-To Questions
+### Procedural Questions
 
 ```
 how to learn machine learning
@@ -155,9 +155,11 @@ how does encryption work
 
 ---
 
-## ⚙️ Configuration (Optional)
+## Configuration (Optional)
 
-### Add API Keys for Better Results
+### Adding API Keys
+
+For enhanced search results:
 
 ```bash
 # Google Custom Search (optional)
@@ -168,11 +170,11 @@ export GOOGLE_CSE_ID="your-cse-id"
 export BING_API_KEY="your-bing-key"
 ```
 
-**Without API keys:** DuckDuckGo HTML scraping works automatically! ✅
+**Note**: Without API keys, DuckDuckGo HTML scraping works automatically.
 
 ---
 
-## 📊 Understanding the Output
+## Understanding Output
 
 ### Answer Format
 
@@ -201,7 +203,7 @@ export BING_API_KEY="your-bing-key"
 
 ---
 
-## 🧪 Run Demos
+## Running Demos
 
 ### Simple Demo
 
@@ -211,22 +213,22 @@ python demo_simple.py
 
 Quick test with one question.
 
-### Interactive Demo
+### Multiple Questions Demo
 
 ```bash
 python demo_quick.py
 ```
 
-Multiple example questions.
+Several example questions.
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### "Module not found" Error
 
 ```bash
-# Make sure you installed Velocity
+# Ensure Velocity is installed
 pip install -e .
 ```
 
@@ -238,19 +240,19 @@ pip install -e .
 ### Network Errors
 
 - Check internet connection
-- DuckDuckGo/Wikipedia might be temporarily unavailable
+- DuckDuckGo/Wikipedia may be temporarily unavailable
 - Fallback systems will activate automatically
 
 ---
 
-## 📚 Next Steps
+## Next Steps
 
-### Learn More
+### Further Documentation
 
 - **[README.md](README.md)** - Full documentation
 - **[PARADIGM.md](PARADIGM.md)** - The Velocity paradigm
 - **[REAL_WEB_SEARCH.md](REAL_WEB_SEARCH.md)** - Web search details
-- **[FINAL_STATUS.md](FINAL_STATUS.md)** - Current status
+- **[ALGORITHMIC_CORE.md](ALGORITHMIC_CORE.md)** - Algorithm details
 
 ### Python API
 
@@ -274,7 +276,7 @@ print(result['uncertainty'])     # LOW/MEDIUM/HIGH
 print(result['source_breakdown']) # Sources used
 ```
 
-### Customize
+### Customization
 
 ```python
 # More hypotheses = more thorough (but slower)
@@ -289,14 +291,19 @@ core = VelocityCore(max_iterations=5)
 
 ---
 
-## ✅ Quick Reference
+## Command Reference
 
-### Commands
+### Installation Commands
+
+- `python -m venv venv` - Create virtual environment
+- `pip install -r requirements.txt` - Install dependencies
+- `pip install -e .` - Install Velocity
+- `pytest tests/` - Run tests
+
+### Runtime Commands
 
 - `python interactive_velocity.py` - Start interactive mode
 - `python demo_simple.py` - Quick demo
-- `pytest tests/` - Run tests
-- `pip install -e .` - Install Velocity
 
 ### Interactive Commands
 
@@ -304,28 +311,28 @@ core = VelocityCore(max_iterations=5)
 - `help` → Show help
 - `exit` or `quit` → Exit
 
-### Key Features
+---
 
-- ✅ No LLM dependency (no hallucinations)
-- ✅ Real-time web search (always current)
-- ✅ 7-step cognitive loop (transparent reasoning)
-- ✅ Confidence calibration (honest about uncertainty)
-- ✅ Multi-language support (English, Turkish, + code)
+## Key Features
+
+- **No LLM dependency**: No hallucinations, only real sources
+- **Real-time web search**: Always current information
+- **7-step cognitive loop**: Transparent, auditable reasoning
+- **Confidence calibration**: Honest about uncertainty
+- **Multi-language support**: English, Turkish, and code generation
 
 ---
 
-## 🎉 You're Ready!
-
-Start asking questions:
+## Ready to Start
 
 ```bash
 python interactive_velocity.py
 ```
 
-**Velocity is ready to answer!** 🚀
+**Velocity is ready to answer your questions**
 
 ---
 
 *"Intelligence lives in the speed of interrogation, not in the size of memory."*
 
-**Velocity - Network-Native Intelligence** 🌐✨
+**Velocity - Network-Native Intelligence**
