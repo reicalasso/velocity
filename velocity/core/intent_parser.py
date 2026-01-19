@@ -23,6 +23,9 @@ class DecisionType(Enum):
     ANALYTICAL = "analytical"     # Analitik (Why does X?)
     PROCEDURAL = "procedural"     # Prosedürel (How to do X?)
     GENERATIVE = "generative"     # Üretici (Write X, Create Y, Generate Z)
+    SOCIAL = "social"              # Sosyal (Hi, How are you, Thanks)
+    META = "meta"                  # Meta (About Velocity itself)
+    CREATIVE = "creative"          # Yaratıcı (Tell me a story)
 
 
 @dataclass
@@ -57,16 +60,34 @@ class IntentParser:
     """
     
     def __init__(self):
-        # Karar tipi tanıma için pattern'ler
+        # Karar tipi tanıma için pattern'ler (order matters - check specific first!)
         self.patterns = {
+            # SOCIAL - Check FIRST (most specific, short phrases)
+            DecisionType.SOCIAL: [
+                r'^\b(hi|hello|hey|naber|selam|merhaba|nasılsın|how are you|thanks|thank you|teşekkür)\b$',
+                r'^\b(good morning|good night|iyi günler|günaydın|iyi geceler)\b$',
+                r'^\b(bye|goodbye|see you|hoşça kal|görüşürüz)\b$'
+            ],
+            # META - Questions about Velocity itself
+            DecisionType.META: [
+                r'\b(velocity|sen|you|your|senin)\b.*\b(what|who|how|ne|nasıl|kimsin)\b',
+                r'\bwhat (are|is) you\b', r'\bsen (ne|kim)\b'
+            ],
+            # CREATIVE - Story, poem, joke requests
+            DecisionType.CREATIVE: [
+                r'\b(story|poem|joke|şiir|hikaye|fıkra)\b',
+                r'\btell me (a|about)\b', r'\banla\b.*\b(hikaye|fıkra)\b'
+            ],
+            # GENERATIVE - Code, document generation
             DecisionType.GENERATIVE: [
                 r'\bwrite\b', r'\bcreate\b', r'\bgenerate\b', r'\bmake\b',
                 r'\byaz\b', r'\boluştur\b', r'\büret\b', r'\byap\b',
                 r'\bkod\b', r'\bcode\b', r'\bexample\b', r'\börnek\b'
             ],
+            # FACTUAL - What is X?
             DecisionType.FACTUAL: [
                 r'\bwhat is\b', r'\bdefine\b', r'\bexplain\b',
-                r'\bnedir\b', r'\btanımla\b', r'\banla\b'
+                r'\bnedir\b', r'\btanımla\b', r'\banla\b', r'\bkimdir\b'
             ],
             DecisionType.COMPARATIVE: [
                 r'\bcompare\b', r'\bvs\b', r'\bdifference\b',

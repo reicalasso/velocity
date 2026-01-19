@@ -24,12 +24,13 @@ import asyncio
 from typing import Dict, Any, Optional, List
 from loguru import logger
 
-from .intent_parser import IntentParser, IntentGraph
+from .intent_parser import IntentParser, IntentGraph, DecisionType
 from .epistemic_router import EpistemicRouter, SourceStrategy
 from .hypothesis_generator import HypothesisGenerator, Hypothesis
 from .interrogation_loop import ParallelInterrogationEngine, InterrogationResult
 from .hypothesis_eliminator import HypothesisEliminator, EliminationCriteria
 from .state_synthesizer import StateSynthesizer, SynthesizedState
+from .network_gate import NetworkGate, generate_local_response
 from ..network.interrogator import NetworkInterrogator
 
 
@@ -69,6 +70,7 @@ class VelocityCore:
         """
         # Components
         self.intent_parser = IntentParser()
+        self.network_gate = NetworkGate()
         self.epistemic_router = EpistemicRouter()
         self.hypothesis_generator = HypothesisGenerator(max_hypotheses=max_hypotheses)
         
@@ -130,6 +132,45 @@ class VelocityCore:
         logger.info(f"  Type: {intent.decision_type.value}")
         logger.info(f"  Uncertainty: {intent.uncertainty:.2f}")
         logger.info(f"  Subgoals: {len(intent.subgoals)}")
+        
+        # ============================================
+        # NETWORK GATE: Do we need the network?
+        # ============================================
+        gate_decision = self.network_gate.should_interrogate(intent)
+        
+        if not gate_decision['interrogate']:
+            # Local response mode - skip network
+            logger.info(f"\n[NETWORK GATE] SKIP: {gate_decision['reason']}")
+            local_answer = generate_local_response(intent, gate_decision['response_mode'])
+            
+            return {
+                'decision': local_answer,
+                'confidence': 1.0,  # Local responses are certain
+                'confidence_interval': (1.0, 1.0),
+                'uncertainty': 'CERTAIN',
+                'evidence': [],
+                'contradictions': [],
+                'alternatives': [],
+                'intent': {
+                    'goal': intent.goal,
+                    'type': intent.decision_type.value,
+                    'uncertainty': intent.uncertainty,
+                    'subgoals': intent.subgoals
+                },
+                'source_breakdown': {},
+                'hypotheses': {
+                    'total': 0,
+                    'surviving': 0,
+                    'eliminated': 0
+                },
+                'execution_metadata': {
+                    'mode': 'local_response',
+                    'reason': gate_decision['reason'],
+                    'network_used': False
+                }
+            }
+        
+        logger.info(f"\n[NETWORK GATE] INTERROGATE: {gate_decision['reason']}")
         
         # ============================================
         # STEP 2: EPISTEMIC ROUTING

@@ -389,17 +389,23 @@ class NLPProcessor:
     
     def extractive_summarize(self, text: str, num_sentences: int = 3) -> str:
         """
-        Extractive summarization (LLM değil!)
+        Extractive summarization with natural spacing
         
-        En önemli cümleleri seç (TF-IDF based)
+        Selects most important sentences using TF-IDF
         """
         try:
-            # Split into sentences
-            sentences = re.split(r'[.!?]+', text)
+            # Clean text spacing first
+            text = self._clean_text_spacing(text)
+            
+            # Split into sentences (preserve spacing)
+            sentences = re.split(r'(?<=[.!?])\s+', text)
             sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
             
             if len(sentences) <= num_sentences:
-                return ' '.join(sentences)
+                result = ' '.join(sentences)
+                if not result.endswith('.'):
+                    result += '.'
+                return result
             
             # Score sentences with TF-IDF
             from sklearn.feature_extraction.text import TfidfVectorizer
@@ -414,13 +420,54 @@ class NLPProcessor:
             top_indices.sort()  # Keep original order
             
             summary_sentences = [sentences[i] for i in top_indices]
-            return '. '.join(summary_sentences) + '.'
+            
+            # Join with proper spacing
+            result = ' '.join(summary_sentences)
+            
+            # Ensure ends with period
+            if not result.endswith(('.', '!', '?')):
+                result += '.'
+            
+            return result
             
         except Exception as e:
             logger.debug(f"Summarization failed: {e}")
-            # Fallback: first N sentences
-            sentences = re.split(r'[.!?]+', text)
-            return '. '.join(sentences[:num_sentences]) + '.'
+            # Fallback: first N sentences with cleaning
+            text = self._clean_text_spacing(text)
+            sentences = re.split(r'(?<=[.!?])\s+', text)
+            result = ' '.join(sentences[:num_sentences])
+            if not result.endswith('.'):
+                result += '.'
+            return result
+    
+    def _clean_text_spacing(self, text: str) -> str:
+        """
+        Fix common spacing issues in extracted text
+        
+        Makes text readable and natural
+        """
+        # Fix concatenated camelCase words
+        text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+        
+        # Fix word-number concatenation
+        text = re.sub(r'([a-z])(\d)', r'\1 \2', text)
+        text = re.sub(r'(\d)([a-z])', r'\1 \2', text)
+        
+        # Fix punctuation spacing
+        text = re.sub(r'\s*,\s*', ', ', text)
+        text = re.sub(r'\s*\.\s*', '. ', text)
+        text = re.sub(r'\s*;\s*', '; ', text)
+        text = re.sub(r'\s*:\s*', ': ', text)
+        text = re.sub(r'\s*!\s*', '! ', text)
+        text = re.sub(r'\s*\?\s*', '? ', text)
+        
+        # Fix multiple spaces
+        text = re.sub(r'\s+', ' ', text)
+        
+        # Fix space before period
+        text = re.sub(r'\s+\.', '.', text)
+        
+        return text.strip()
     
     def calculate_relevance(
         self,

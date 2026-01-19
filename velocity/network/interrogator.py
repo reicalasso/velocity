@@ -139,27 +139,43 @@ class NetworkInterrogator:
                     results = await self.web_search.search(query, source_type="web")
                     
                     if results:
-                        best_result = results[0]
-                        content = best_result.content or best_result.snippet
+                        # Combine multiple results for richer answer
+                        all_content = []
+                        all_titles = []
+                        all_urls = []
                         
-                        if content and len(content) > 50:
-                            # NLP processing (no LLM!)
-                            summary = self.nlp.extractive_summarize(content, num_sentences=3)
-                            keywords = self.nlp.extract_keywords(content, top_k=5)
+                        for result in results[:3]:  # Use top 3 results
+                            content = result.content or result.snippet
+                            if content and len(content) > 50:
+                                all_content.append(content)
+                                all_titles.append(result.title)
+                                all_urls.append(result.url)
+                        
+                        if all_content:
+                            # Combine and summarize all content
+                            combined_text = " ".join(all_content)
                             
-                            logger.success(f"✅ Real search: {best_result.source_type}")
+                            # Extract summary from combined content
+                            summary = self.nlp.extractive_summarize(combined_text, num_sentences=4)
+                            keywords = self.nlp.extract_keywords(combined_text, top_k=7)
+                            
+                            # Calculate average relevance
+                            avg_relevance = sum(r.relevance_score for r in results[:3]) / min(3, len(results))
+                            
+                            logger.success(f"✅ Real search: {results[0].source_type} ({len(all_content)} sources)")
                             
                             return {
                                 "success": True,
                                 "query": query,
-                                "source": f"{best_result.source_type}:{best_result.url}",
+                                "source": f"{results[0].source_type}://multi-source",
                                 "content": summary,
                                 "metadata": {
-                                    "title": best_result.title,
-                                    "url": best_result.url,
+                                    "titles": all_titles,
+                                    "urls": all_urls,
                                     "keywords": keywords,
-                                    "relevance": best_result.relevance_score,
-                                    "method": "real_web_search+nlp"
+                                    "relevance": avg_relevance,
+                                    "sources_combined": len(all_content),
+                                    "method": "real_web_search+nlp+multi_source"
                                 }
                             }
                 except Exception as e:

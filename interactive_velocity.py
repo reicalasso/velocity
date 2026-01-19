@@ -31,28 +31,26 @@ async def ask_velocity(question: str, core: VelocityCore) -> dict:
     try:
         result = await core.execute(question)
         
-        # Display answer
-        print("\n[ANSWER]")
+        # Display answer naturally (ChatGPT-like)
+        print("\n" + "="*70)
+        
         decision = result['decision']
         
-        # Show first 500 characters
-        if len(decision) > 500:
-            print(decision[:500] + "...")
+        # Word wrap for better readability
+        import textwrap
+        wrapped_lines = textwrap.fill(decision, width=68, break_long_words=False, break_on_hyphens=False)
+        print(wrapped_lines)
+        
+        # Simplified confidence indicator (subtle)
+        confidence = result['confidence']
+        if confidence >= 0.7:
+            print("\n(High confidence)")
+        elif confidence >= 0.5:
+            print("\n(Moderate confidence)")
         else:
-            print(decision)
+            print("\n(Low confidence)")
         
-        # Show details
-        print(f"\n[DETAILS]")
-        print(f"  Confidence: {result['confidence']:.1%}")
-        print(f"  Uncertainty: {result['uncertainty']}")
-        print(f"  Evidence count: {len(result['evidence'])} pieces")
-        
-        # Show sources
-        print(f"  Sources:")
-        for source, count in result['source_breakdown'].items():
-            print(f"    - {source}: {count} queries")
-        
-        print('='*70)
+        print("="*70)
         
         return result
         

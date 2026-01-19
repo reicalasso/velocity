@@ -2,20 +2,18 @@
 STATE SYNTHESIS
 ===============
 
-Kalan hipotezler birleştirilir:
+Remaining hypotheses are synthesized into a final answer.
 
 FinalState = aggregate(states)
 
-Bu state şunları içerir:
-- Karar
-- Dayanaklar
-- Belirsizlik
-- Alternatifler
-- Güven aralığı
+This state contains:
+- Decision (user-friendly answer)
+- Evidence
+- Uncertainty
+- Alternatives
+- Confidence interval
 
-Bu nokta:
-- Model cevabı değil
-- Hesaplanmış sonuçtur
+This is not model output, but computed result.
 """
 
 from dataclasses import dataclass, field
@@ -24,6 +22,41 @@ import statistics
 
 from .hypothesis_generator import Hypothesis
 from .state import CognitiveState, Evidence, Contradiction
+
+
+# Simple NLP for answer synthesis
+def simple_summarize(texts: List[str], max_sentences: int = 3) -> str:
+    """
+    Simple extractive summarization
+    
+    Selects most important sentences from texts
+    """
+    if not texts:
+        return "No information available."
+    
+    # Combine all texts
+    combined = " ".join(texts)
+    
+    # Split into sentences
+    import re
+    sentences = re.split(r'[.!?]+', combined)
+    sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
+    
+    if not sentences:
+        return combined[:300]
+    
+    # Score sentences by length and position (early sentences are better)
+    scored = []
+    for i, sent in enumerate(sentences):
+        # Score: longer sentences + earlier position
+        score = len(sent.split()) / (i + 1)
+        scored.append((score, sent))
+    
+    # Sort by score, take top N
+    scored.sort(reverse=True)
+    top_sentences = [sent for _, sent in scored[:max_sentences]]
+    
+    return " ".join(top_sentences)
 
 
 @dataclass
@@ -136,30 +169,141 @@ class StateSynthesizer:
     
     def _determine_decision(self, hypotheses: List[Hypothesis]) -> str:
         """
-        Ana kararı belirle
+        Determine final decision with natural, ChatGPT-like answer
         
-        En yüksek confidence'a sahip hipotezin açıklaması + evidence sentezi
+        Synthesizes evidence into coherent answer using NLP
         """
         if not hypotheses:
-            return "Unable to determine decision."
+            return "I couldn't find enough information to answer your question."
         
-        # En iyi hipotezi bul
+        # Get best hypothesis
         best = max(hypotheses, key=lambda h: h.confidence)
         
-        # Evidence'dan özet çıkar
-        decision_parts = [best.description]
-        
-        # En iyi evidence'ları ekle
+        # Collect all evidence content
+        all_evidence_texts = []
         all_evidence = []
+        
         for evidence_list in best.state.knowledge.values():
-            all_evidence.extend(evidence_list)
+            for evidence in evidence_list:
+                all_evidence.append(evidence)
+                # Extract and clean text
+                clean_content = self._clean_evidence_text(evidence.content)
+                if clean_content:
+                    all_evidence_texts.append(clean_content)
         
-        # Confidence'a göre sırala, en iyi 3'ü al
+        # Sort evidence by confidence
         all_evidence.sort(key=lambda e: e.confidence, reverse=True)
-        for evidence in all_evidence[:3]:
-            decision_parts.append(f"[{evidence.source}]: {evidence.content[:150]}...")
         
-        return "\n\n".join(decision_parts)
+        # Create natural answer
+        if not all_evidence_texts:
+            return "I found some results but couldn't extract clear information."
+        
+        # Combine and clean all content
+        combined_text = ' '.join(all_evidence_texts)
+        combined_text = self._deep_clean_text(combined_text)
+        
+        # Generate summary (4-5 sentences for richer answer)
+        summary = simple_summarize([combined_text], max_sentences=4)
+        
+        # Format naturally (add spacing, clean up)
+        natural_answer = self._naturalize_answer(summary)
+        
+        # Add subtle source attribution
+        source_note = self._format_sources(all_evidence[:3])
+        
+        return f"{natural_answer}\n\n{source_note}"
+    
+    def _clean_evidence_text(self, text: str) -> str:
+        """Initial cleaning of evidence text"""
+        import re
+        
+        # Remove URLs
+        text = re.sub(r'http[s]?://\S+', '', text)
+        
+        # Remove reference markers [1], [2], etc.
+        text = re.sub(r'\[\d+\]', '', text)
+        
+        # Remove excessive whitespace
+        text = re.sub(r'\s+', ' ', text)
+        
+        # Remove very short or very long chunks
+        if len(text) < 30 or len(text) > 1000:
+            return ""
+        
+        return text.strip()
+    
+    def _deep_clean_text(self, text: str) -> str:
+        """Deep cleaning for natural readability"""
+        import re
+        
+        # Fix concatenated words (camelCase)
+        text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+        
+        # Fix word-number concatenation
+        text = re.sub(r'([a-z])(\d)', r'\1 \2', text)
+        text = re.sub(r'(\d)([a-z])', r'\1 \2', text)
+        
+        # Fix punctuation spacing
+        text = re.sub(r'\s*,\s*', ', ', text)
+        text = re.sub(r'\s*\.\s*', '. ', text)
+        text = re.sub(r'\s+', ' ', text)
+        
+        # Remove fragments that are too short
+        sentences = text.split('.')
+        sentences = [s.strip() for s in sentences if len(s.strip()) > 25]
+        
+        return '. '.join(sentences)
+    
+    def _naturalize_answer(self, text: str) -> str:
+        """Make answer more natural and readable"""
+        import re
+        
+        # Split into sentences
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        sentences = [s.strip() for s in sentences if s.strip()]
+        
+        if not sentences:
+            return text
+        
+        # Join sentences naturally (no forced transitions)
+        natural_text = ' '.join(sentences)
+        
+        # Ensure proper capitalization
+        if natural_text and natural_text[0].islower():
+            natural_text = natural_text[0].upper() + natural_text[1:]
+        
+        # Ensure ends with punctuation
+        if natural_text and not natural_text[-1] in '.!?':
+            natural_text += '.'
+        
+        return natural_text
+    
+    def _format_sources(self, evidence_list: List[Evidence]) -> str:
+        """Format source attribution naturally"""
+        if not evidence_list:
+            return ""
+        
+        # Extract domains from sources
+        sources = set()
+        for ev in evidence_list:
+            src = ev.source
+            if '://' in src:
+                # Extract domain
+                domain = src.split('://')[1].split('/')[0]
+                # Remove www. prefix
+                domain = domain.replace('www.', '')
+                sources.add(domain)
+            elif ':' in src:
+                # Handle other formats like "duckduckgo:url"
+                source_type = src.split(':')[0]
+                sources.add(source_type)
+        
+        if not sources:
+            return ""
+        
+        # Format nicely
+        source_list = ', '.join(sorted(list(sources))[:3])
+        return f"_Information from: {source_list}_"
     
     def _aggregate_confidence(self, hypotheses: List[Hypothesis]) -> float:
         """
