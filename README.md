@@ -53,7 +53,7 @@ Intelligence emerges from the speed and quality of information access, not from 
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/velocity.git
+git clone https://github.com/reicalasso/velocity.git
 cd velocity
 
 # Create virtual environment

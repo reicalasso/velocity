@@ -3,32 +3,35 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "velocity-paradigm"
-version = "0.1.0"
-description = "Network-Native, Dataset-Free General Intelligence"
+name = "velocity-nnei"
+version = "0.4.0"
+description = "Network-Native Epistemic Intelligence (NNEI) - Intelligence through interrogation, not memorization"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "Velocity Team"}
+    {name = "reicalasso", email = ""}
 ]
 keywords = [
-    "artificial-intelligence",
-    "machine-learning",
+    "nnei",
+    "epistemic-intelligence",
     "network-native",
-    "dataset-free",
-    "general-intelligence"
+    "web-search",
+    "nlp",
+    "no-llm",
+    "real-time-ai"
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
 ]
 
 dependencies = [
@@ -50,20 +53,12 @@ dev = [
     "black>=23.0.0",
     "ruff>=0.1.0",
 ]
-gpu = [
-    "torch>=2.1.0",
-    "sentence-transformers>=2.2.0",
-]
-llm = [
-    "openai>=1.0.0",
-    "anthropic>=0.8.0",
-]
 
 [project.urls]
-Homepage = "https://github.com/velocity-paradigm/velocity"
-Documentation = "https://velocity-paradigm.readthedocs.io"
-Repository = "https://github.com/velocity-paradigm/velocity"
-Issues = "https://github.com/velocity-paradigm/velocity/issues"
+Homepage = "https://github.com/reicalasso/velocity"
+Documentation = "https://github.com/reicalasso/velocity#readme"
+Repository = "https://github.com/reicalasso/velocity"
+Issues = "https://github.com/reicalasso/velocity/issues"
 
 [tool.setuptools]
 packages = ["velocity"]

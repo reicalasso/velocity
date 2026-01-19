@@ -9,7 +9,7 @@
 ### Step 1: Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/velocity.git
+git clone https://github.com/reicalasso/velocity.git
 cd velocity
 ```
 
